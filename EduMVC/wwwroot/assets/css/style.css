@@ -1,0 +1,256 @@
+:root {
+	--pageWith: 40px;
+	--boxHeight: 280px;
+	--boxWidth: 180px;
+	--borderRadius: 10px;
+}
+
+.paging_button {
+	height: var(--pageWith);
+	width: 100px;
+	border-radius: 5px;
+	border: 1px solid groove;
+	background-color: #00ffff;
+	color: white;
+	font-size: 10px;
+	font-weight: bold;
+	cursor: pointer;
+}
+
+	.paging_button:hover {
+		background-color: blue; 
+	}
+
+.paging_button_inactive {
+	height: var(--pageWith);
+	width: 100px;
+	border-radius: 5px;
+	border: 1px solid groove;
+	background-color: #00ffff;
+	color: darkgrey;
+	font-size: 10px;
+	font-weight: bold;
+}
+
+.page_circle {
+	height: var(--pageWith);
+	width: var(--pageWith);
+	border-radius: 50%;
+}
+
+.video-player {
+	width: 100%; 
+	height: auto; 
+	max-height: 70vh;
+}
+
+
+
+.custom-files-label {
+	display: block;
+	max-height: 100px;
+	overflow-y: auto; 
+	white-space: pre-wrap; 
+}
+
+.document-name:focus,
+.document-name:hover {
+	background-color: transparent;
+	color: inherit; 
+}
+
+.pagination-container {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	text-align: center;
+}
+
+.question-text-container {
+	display: inline-block;
+	vertical-align: top;
+	max-width: 100%;
+}
+
+.short-text {
+	white-space: nowrap; /* Keeps text truncated with ellipsis */
+}
+
+.full-text {
+	white-space: normal; /* Wraps long text within the container */
+	word-break: break-word; /* Break long words if necessary */
+	overflow-wrap: break-word; /* Handle word wrapping */
+	max-width: 300px; /* Prevent horizontal overflow */
+}
+
+.answer-container {
+	padding: 10px;
+	background-color: #f9f9f9;
+	border: 1px solid #ddd;
+	margin-top: 10px;
+}
+
+.read-more {
+	white-space: normal;
+}
+
+.course-link {
+	display: block;
+	text-decoration: none;
+	color: inherit; /* Inherits the text color from the parent */
+}
+
+.product-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem; /* Adjust as needed */
+}
+
+.product-item {
+	border: 1px solid #ccc;
+	padding: 1rem;
+	width: 220px; 
+	text-align: center;
+	position: relative;
+	/*overflow: hidden; /* Prevent content overflow */
+	transition: all 0.3s ease-in-out;
+}
+
+.course-image {
+	position: relative;
+	width: 200px;
+	height: 200px;
+	overflow: hidden;
+	margin-bottom: 0.5rem;
+	transition: width 0.3s ease-in-out, height 0.3s ease-in-out;
+}
+
+	/* Style the video to fit the initial container size */
+	.course-image video {
+		width: 100%;
+		height: 100%;
+	}
+
+	/* Expand the container and video on hover */
+	.course-image:hover {
+		width: 400px; 
+		height: 300px; 
+		z-index: 10; /* Bring to front */
+	}
+
+/* Prevent text from overlapping expanded video */
+.product-item.expanded {
+	width: 400px; /* Match width of expanded course-image */
+	transition: width 0.3s ease-in-out;
+}
+
+.course-details {
+	margin: 20px;
+	padding: 20px;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	background-color: #f9f9f9;
+}
+
+.section {
+	margin-bottom: 20px;
+	padding: 10px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	background-color: #fff;
+}
+
+.lesson, .quiz {
+	margin-bottom: 10px;
+}
+
+h1, h2, h3, h4 {
+	margin: 10px 0;
+}
+
+.course-details-list {
+	border: 1px solid #ddd;
+	padding: 15px;
+	background: #f9f9f9;
+	border-radius: 8px;
+}
+
+#video-container {
+	margin-bottom: 20px;
+}
+
+.course-details {
+	padding: 20px;
+	border: 1px solid #ddd;
+	border-radius: 8px;
+	background: #f9f9f9;
+}
+
+.lesson-list {
+	list-style: none;
+	padding: 0;
+}
+
+.lesson-link {
+	text-decoration: none;
+	color: #007bff;
+}
+
+.document-list {
+	list-style: none;
+	padding: 0;
+	margin: 5px 0;
+}
+
+.ratings-card {
+	border: 1px solid #ddd;
+	padding: 15px;
+	background-color: #fff;
+	border-radius: 5px;
+	margin-bottom: 15px;
+}
+
+/* Style for question text with line breaks */
+.question-text {
+	white-space: pre-wrap;
+}
+
+#quiz-questions button {
+	margin: 5px;
+}
+
+.stars {
+	display: flex;
+	justify-content: start;
+	gap: 5px;
+	color: #000000; /* Default empty star color */
+}
+
+.rating-header {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.star {
+	font-size: 2rem;
+	cursor: pointer;
+	color: #000000; /* Default empty star color */
+	transition: color 0.3s ease;
+}
+
+	input[name="stars"]:checked + label {
+		color: #000000; 
+	}
+
+.star:hover,
+.star:hover ~ .star {
+	color: #000000 /* Reset color for stars after hover */
+}
+
+.disabled-course {
+	opacity: 0.6;
+	pointer-events: none; /* Prevent clicking */
+	cursor: not-allowed;
+}

@@ -1,0 +1,87 @@
+﻿@model List<EduMVC.ViewModels.QuestionViewModel>
+@{
+    var currentPage = (int)ViewBag.CurrentPage;
+    var maxPage = (int)ViewBag.MaxPage;
+    var previousPage = currentPage - 1;
+    var nextPage = currentPage + 1;
+}
+<table>
+    <tr>
+        <th width="20%">No.</th>
+        <th width="70%">Question</th>
+    </tr>
+    @if (Model != null && Model.Any())
+    {
+        foreach (var question in Model)
+        {
+            <tr>
+                <td>@question.Position</td>
+                <td>
+                    <div class="question-text-container">
+                        <span class="short-text" style="display: block; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            @question.Text
+                        </span>
+                        <span class="full-text" style="display: none; white-space: normal;">@question.Text</span>
+                    </div>
+                </td>
+                <td>
+                    <button type="button" class="read-more btn btn-primary" style="white-space: nowrap" onclick="showFullText(this)">
+                        <span>Read More</span>
+                    </button>
+                </td>
+                <td>
+                    <button type="button" class="answer-toggle btn btn-primary" onclick="toggleAnswer(this)">
+                        <span>Answer<span class="mbri-arrow-down"></span></span>
+                    </button>
+                </td>
+                <td>
+                    <a href="~/Question/Edit?questionId=@question.Id" class="btn btn-primary">
+                        <i class="mbri-edit2"></i>
+                    </a>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger" onclick="deleteQuestion('@question.Id')">
+                        <i class="mbri-trash"></i>
+                    </button>
+                </td>
+            </tr>
+            <tr class="answer-row" style="display: none;">
+                <td colspan="3">
+                    <div class="answer-container">
+                        <strong>Answer:</strong> @question.CorrectAnswer
+                    </div>
+                </td>
+            </tr>
+        }
+    }
+    else
+    {
+        <tr>
+            <td colspan="3">No question created</td>
+        </tr>
+    }
+</table>
+
+<div class="row">
+    <div class="col-md-12" style="text-align: center;">
+        @if (previousPage == 0)
+        {
+            <button type="button" class="paging_button_inactive">Previous</button>
+        }
+        else
+        {
+            <button type="button" class="paging_button" onclick="reloadQuestionList('@ViewBag.QuizId' ,@previousPage)">Previous</button>
+        }
+        <button type="button" class="page_circle">@ViewBag.CurrentPage</button>
+
+        @if (maxPage == currentPage)
+        {
+            <button type="button" class="paging_button_inactive">Next</button>
+        }
+        else
+        {
+            <button type="button" class="paging_button" onclick="reloadQuestionList('@ViewBag.QuizId' ,@nextPage)">Next</button>
+        }
+    </div>
+</div>
+

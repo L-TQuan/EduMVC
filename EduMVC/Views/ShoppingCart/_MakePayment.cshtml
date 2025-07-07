@@ -1,0 +1,18 @@
+﻿@model EduMVC.ViewModels.OrderVM
+
+<h4>Checkout</h4>
+<hr />
+<div>
+    <p><strong>Order Date:</strong> @Model.OrderDate.ToString("dd/MM/yyyy")</p>
+    <p><strong>User Name:</strong> @Model.UserName</p>
+    <p><strong>Number of Courses:</strong> @Model.CourseAmount</p>
+    <p><strong>Total Price:</strong> @Model.TotalPrice.ToString("C")</p>
+</div>
+
+<input type="hidden" id="OrderDate" value="@Model.OrderDate" />
+
+<div class="form-group">
+    <input type="button" onclick="createOrder();" value="Confirm Purchase" class="btn btn-primary" />
+</div>
+
+

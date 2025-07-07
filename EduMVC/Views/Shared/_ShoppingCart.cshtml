@@ -1,0 +1,20 @@
+﻿@model List<EduMVC.ViewModels.CourseSummaryVM>
+@if (Model != null && Model.Count > 0) {
+    foreach (var course in Model)
+    {
+        <tr>
+            <td>
+                <img src="@Url.Content(!string.IsNullOrEmpty(course.ImagePath)
+                    ? course.ImagePath
+                    : "~/images/course_icon.png")"
+                     alt="@course.Title" style="width:100px; height:auto;" />
+            </td>
+            <td>@course.Title</td>
+            <td>@course.Price</td>
+            <td>@course.OwnerName</td>
+            <td>
+                <button type="button" class="btn btn-danger" onclick="removeCourseFromCart('@course.Id')">Remove</button>
+            </td>
+        </tr>
+    }
+}

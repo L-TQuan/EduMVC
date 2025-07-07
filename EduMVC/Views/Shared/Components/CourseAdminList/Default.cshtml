@@ -1,0 +1,98 @@
+﻿@model List<EduMVC.ViewModels.CourseAdminVM>
+@{
+    var currentPage = (int)ViewBag.CurrentPage;
+    var maxPage = (int)ViewBag.MaxPage;
+    var previousPage = currentPage - 1;
+    var nextPage = currentPage + 1;
+}
+<form method="post">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th width="5%"></th>
+                <th width="20%">Title</th>
+                <th width="25%">Description</th>
+                <th width="10%">Price</th>
+                <th width="10%">Teacher</th>
+                <th width="10%">Date</th>
+                <th width="20%">Status</th>
+                <th width="5%">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var course in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="course-image" id="courseContainer_@course.Id">
+                                <img name="audioImage"
+                                     src="@Url.Content(!string.IsNullOrEmpty(course.ImagePath) ? course.ImagePath : "~/images/course_icon.png")"
+                                     alt="@course.Title"
+                                     style="width: 100%; height: auto;"
+                                     id="image_@course.Id" />
+
+                                <!-- Video Preview Element -->
+                                <video id="previewVideo_@course.Id" style="display: none;" loop>
+                                    <source src="@Url.Content(course.PreviewMediumPath)" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            </div>
+                        </td>
+                        <td>@course.Title</td>
+                        <td>@course.Description</td>
+                        <td>@course.Price</td>
+                        <td>@course.OwnerName</td>
+                        <td>@course.CreatedDate</td>
+                        <td>
+                            <label for="course-status-@course.Id" class="sr-only">Status</label>
+                            @Html.DropDownListFor(
+                                     model => course.PublishStatus,
+                                     new SelectList(Enum.GetValues(typeof(EduMVC.Enums.PublishStatus))
+                                     .Cast<EduMVC.Enums.PublishStatus>()
+                                     .Where(status => status != EduMVC.Enums.PublishStatus.Draft),
+                                     course.PublishStatus),
+                                     new { @class = "form-control", id = "course-status-" + course.Id }
+                                     )
+                        </td>
+                        <td>
+                            <a href="~/Course/Details?courseId=@course.Id" class="btn btn-primary" style="margin-bottom: 5px;">View</a>
+                            <button type="button" class="btn btn-primary" onclick="saveCourseStatus('@course.Id')">Save</button>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" class="text-center">No courses found</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</form>
+
+<div class="row">
+    <div class="col-md-12" style="text-align: center;">
+        @if (previousPage == 0)
+        {
+            <button type="button" class="paging_button_inactive">Previous</button>
+        }
+        else
+        {
+            <button type="button" class="paging_button" onclick="reloadCourseAdminList(@previousPage, $('#status-filter').val())">Previous</button>
+        }
+
+        <button type="button" class="page_circle">@ViewBag.CurrentPage</button>
+
+        @if (maxPage == currentPage)
+        {
+            <button type="button" class="paging_button_inactive">Next</button>
+        }
+        else
+        {
+            <button type="button" class="paging_button" onclick="reloadCourseAdminList(@nextPage, $('#status-filter').val())">Next</button>
+        }
+    </div>
+</div>

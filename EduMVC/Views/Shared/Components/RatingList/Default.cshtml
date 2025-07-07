@@ -1,0 +1,60 @@
+﻿@model List<EduMVC.ViewModels.RatingViewModel>
+@{
+    var currentPage = (int)ViewBag.CurrentPage;
+    var maxPage = (int)ViewBag.MaxPage;
+    var previousPage = currentPage - 1;
+    var nextPage = currentPage + 1;
+}
+
+@if (Model.Count > 0)
+{
+    <ul class="list-group">
+        @foreach (var rating in Model)
+        {
+            <li class="list-group-item">
+                <div class="rating-header">
+                    <strong>@rating.StudentName</strong>
+                    <div class="stars">
+                        @for (int i = 1; i <= rating.Stars; i++)
+                        {
+                            <span>&#9733;</span>
+                        }
+                        @for (int i = rating.Stars + 1; i <= 5; i++)
+                        {
+                            <span>&#9734;</span>
+                        }
+                    </div>
+                </div>
+                <p>@rating.Comment</p>
+                <small class="text-muted">Rated on @rating.CreatedDate</small>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>No ratings yet for this course. Be the first to rate!</p>
+}
+
+<div class="row">
+    <div class="col-md-12" style="text-align: center;">
+        @if (previousPage == 0)
+        {
+            <button type="button" class="paging_button_inactive">Previous</button>
+        }
+        else
+        {
+            <button type="button" class="paging_button" onclick="reloadRatingList('@ViewBag.CourseId' ,@previousPage)">Previous</button>
+        }
+        <button type="button" class="page_circle">@ViewBag.CurrentPage</button>
+
+        @if (maxPage == currentPage)
+        {
+            <button type="button" class="paging_button_inactive">Next</button>
+        }
+        else
+        {
+            <button type="button" class="paging_button" onclick="reloadRatingList('@ViewBag.CourseId' ,@nextPage)">Next</button>
+        }
+    </div>
+</div>

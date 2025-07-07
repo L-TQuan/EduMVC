@@ -1,0 +1,121 @@
+﻿@using EduMVC.Enums
+@model List<EduMVC.ViewModels.CourseViewModel>
+@{
+    var currentPage = (int)ViewBag.CurrentPage;
+    var maxPage = (int)ViewBag.MaxPage;
+    var previousPage = currentPage - 1;
+    var nextPage = currentPage + 1;
+}
+<table>
+    <tr>
+        <th width="10%">No.</th>
+        <th width="20%">Image</th>
+        <th width="50%">Title</th>
+        <th width="20%">Price</th>
+    </tr>
+    @if (Model != null && Model.Any())
+    {
+        foreach (var course in Model)
+        {
+            <tr>
+                <td>@course.Position</td>
+                <td>
+                    @if (!string.IsNullOrEmpty(course.ImagePath))
+                    {
+                        <img src="@Url.Content(course.ImagePath)" alt="Course Image" style="width:100%; height:auto;" />
+                    }
+                    else
+                    {
+                        <img src="@Url.Content("~/images/no_image.jfif")" alt="No Image" style="width:100%; height:auto;" />
+                    }
+                </td>
+                <td>@course.Title</td>
+                <td>$ @course.Price</td>
+                <td>
+                    <button type="button" class="btn btn-primary">
+                        <i class="mbri-video" style="cursor:pointer;" onclick="openVideoModal('@Url.Content(course.PreviewMediumPath)')"></i>
+                    </button>
+                </td>
+                <td>
+                    @if (course.PublishStatus == PublishStatus.Draft)
+                    {
+                        <button type="button" class="btn btn-success" onclick="publishCourse('@course.Id')">Publish</button>
+                    }
+                    else if (course.PublishStatus == PublishStatus.Pending)
+                    {
+                        <span class="btn btn-warning">Pending</span>
+                    }
+                    else if (course.PublishStatus == PublishStatus.Published)
+                    {
+                        <span class="btn btn-info">Published</span>
+                    }
+                </td>
+                <td>
+                    <a href="~/Section/Create?courseId=@course.Id" class="btn btn-primary">
+                        Details
+                    </a>
+                </td>
+                <td>
+                    <a href="~/Course/Edit?courseId=@course.Id" class="btn btn-primary">
+                        <i class="mbri-edit2"></i>
+                    </a>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger" onclick="deleteCourse('@course.Id')">
+                        <i class="mbri-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    }
+    else
+    {
+        <tr>
+            <td colspan="3">No course created</td>
+        </tr>
+    }
+</table>
+
+<div id="videoModal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Course Preview Video</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <video id="modalVideo" class="video-player" controls>
+                    <source id="videoSource" src="" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12" style="text-align: center;">
+        @if (previousPage == 0)
+        {
+            <button type="button" class="paging_button_inactive">Previous</button>
+        }
+        else
+        {
+            <button type="button" class="paging_button" onclick="reloadCourseList(@previousPage)">Previous</button>
+        }
+
+        <button type="button" class="page_circle">@ViewBag.CurrentPage</button>
+
+        @if (maxPage == currentPage)
+        {
+            <button type="button" class="paging_button_inactive">Next</button>
+        }
+        else
+        {
+            <button type="button" class="paging_button" onclick="reloadCourseList(@nextPage)">Next</button>
+        }
+    </div>
+</div>
+

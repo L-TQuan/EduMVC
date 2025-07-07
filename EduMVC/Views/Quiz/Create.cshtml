@@ -1,0 +1,104 @@
+﻿@model EduMVC.ViewModels.QuizViewModel
+@{
+    ViewData["Title"] = "Manage Quiz";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isCreate = Model == null || Model.Id == Guid.Empty;
+    var actionString = isCreate ? "Create" : "Edit";
+    var buttonString = isCreate ? "Create" : "Edit";
+}
+
+<div>
+    <h3>@Model.SectionName</h3>
+</div>
+<hr />
+<h2>Manage quiz</h2>
+<form asp-action="@actionString">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="Id" class="form-control" />
+    <input type="hidden" asp-for="SectionId" class="form-control" />
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <label asp-for="Name" class="control-label"></label>
+                    <fieldset class="form-group">
+                        <input asp-for="Name" class="form-control" />
+                    </fieldset>
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="card mt-3">
+                <div class="card-body">
+                    <label asp-for="Description" class="control-label"></label>
+                    <fieldset class="form-group">
+                        <textarea asp-for="Description" class="form-control"></textarea>
+                    </fieldset>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group mt-3" style="text-align: center;">
+                <input type="submit" value="@buttonString" class="btn btn-primary" />
+                <button type="button" class="btn btn-danger" onclick="cancelEdit('@Url.Action("Create", "Quiz")', '@Model.SectionId')">Cancel</button>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group" style="text-align: right;">
+                <a href="~/Section/Create?courseId=@Model.CourseId" class="btn btn-secondary">Return to sections</a>
+            </div>
+            <div id="quiz-list">
+                @await Component.InvokeAsync("QuizList", new { sectionId = Model.SectionId })
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        function cancelEdit(url, sectionId) {
+            window.location.href = url + "?sectionId=" + sectionId;
+        }
+
+        var sectionId = '@Model.SectionId';
+        function deleteQuiz(quizId) {
+
+            $.ajax({
+                type: "POST",
+                url: "/Quiz/Delete",
+                data: { quizId },
+                success: function (data) {
+                    if (data.status) {
+                        reloadQuizList(sectionId , 1);
+                    }
+                },
+                error: function (err) {
+
+                },
+                completed: function (e) {
+
+                }
+            });
+        }
+
+        function reloadQuizList(sectionId, currentPage = 1) {
+
+            $.ajax({
+                type: "GET",
+                url: "/Quiz/ReloadQuizList",
+                data: { sectionId, currentPage },
+                success: function (data) {
+                    let divQuizList = document.getElementById("quiz-list");
+                    if (divQuizList) {
+                        divQuizList.innerHTML = data;
+                    }
+                },
+                error: function (err) {
+
+                },
+                completed: function (e) {
+
+                }
+            });
+        }
+    </script>
+}
+

@@ -1,0 +1,73 @@
+﻿@model EduMVC.ViewModels.CourseDetailsVM
+
+<div class="course-details-list">
+    @if (Model.Sections != null && Model.Sections.Any())
+    {
+        foreach (var sec in Model.Sections)
+        {
+            <div class="section">
+                <h4>@sec.Title</h4>
+                <ul class="lesson-list">
+                    @foreach (var lesson in sec.Lessons)
+                    {
+                        <li style="display: flex; align-items: center;">
+                            <a href="javascript:void(0);" class="lesson-link"
+                               data-lesson-id="@lesson.Id"
+                               data-medium-path="@Url.Content(@lesson.MediumPath)"
+                               style="margin-right: 10px;">
+                                <span>@lesson.Position</span>. <span>@lesson.Name</span>
+                            </a>
+
+                            @if (lesson.Documents != null && lesson.Documents.Any())
+                            {
+                                <div class="dropdown">
+                                    <button class="btn btn-primary dropdown-toggle" type="button"
+                                            id="dropdownMenuButton-@lesson.Id"
+                                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <i class="mbri-opened-folder"></i> Resources
+                                    </button>
+
+                                    <div id="docs-@lesson.Id" class="dropdown-menu" aria-labelledby="dropdownMenuButton-@lesson.Id">
+                                        @foreach (var doc in lesson.Documents)
+                                        {
+                                            <a class="dropdown-item document-name" href="@Url.Content(doc.Path)" download="@doc.DisplayName">
+                                                @doc.DisplayName
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </li>
+                    }
+                </ul>
+                <h5>Quizzes</h5>
+                <ul class="quiz-list">
+                    @foreach (var quiz in sec.Quizzes)
+                    {
+                        <li>
+                            <a href="javascript:void(0);" class="quiz-link" data-quiz-id="@quiz.Id" data-quiz-name="@quiz.Name">
+                                @quiz.Name
+                            </a>
+                            <div class="quiz-questions" id="quiz-@quiz.Id" style="display:none;">
+                                @foreach (var question in quiz.Questions)
+                                {
+                                    <div class="question">
+                                        <p>@question.Text</p>
+                                        <input type="text" class="answer-input" data-correct-answer="@question.CorrectAnswer" />
+                                        <button class="check-answer">Check</button>
+                                        <span class="feedback" style="display:none;"></span>
+                                    </div>
+                                }
+                            </div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    }
+    else
+    {
+        <p>No sections available for this course.</p>
+    }
+</div>
+

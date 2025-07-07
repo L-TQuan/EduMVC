@@ -1,0 +1,160 @@
+﻿@using EduMVC.Enums
+@model EduMVC.ViewModels.CourseSummaryDetailsVM
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>@Model.Title</h1>
+
+<div class="course-details">
+    <div class="image">
+        <img src="@Url.Content(!string.IsNullOrEmpty(Model.ImagePath)
+                ? Model.ImagePath
+                : "~/images/course_icon.png")"
+             alt="@Model.Title" 
+             style="max-width: 300px; height: auto;" />
+    </div>
+    <div class="preview">
+        @if (!string.IsNullOrEmpty(Model.PreviewVideoPath))
+        {
+            <video controls
+                   style="max-width: 300px; height: auto;">
+                <source src="@Url.Content(Model.PreviewVideoPath)" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        }
+        else
+        {
+            <p>No preview video available.</p>
+        }
+    </div>
+    <div class="details">
+        <p><strong>Description:</strong> @Model.Description</p>
+        <p><strong>Owner:</strong> @Model.OwnerName</p>
+        <p><strong>Price:</strong> $@Model.Price</p>
+        <p><strong>Updated Date:</strong> @Model.CreatedDate.ToShortDateString()</p>
+        <p><strong>Average Rating:</strong> @Model.AverageRating.ToString("0.0")/5</p>
+        @switch (Model.PublishStatus)
+        {
+            case CourseStatusEnum.Owned:
+                <button class="btn btn-success" onclick="window.location.href='@Url.Content("~/Course/Create")'">My Course</button>
+                ;
+                break;
+            case CourseStatusEnum.Purchased:
+                <button class="btn btn-secondary" onclick="window.location.href='@Url.Content("~/Course/MyLearning")'">Purchased</button>
+                ;
+                break;
+            case CourseStatusEnum.InCart:
+                <button class="btn btn-warning" onclick="window.location.href='@Url.Content("~/ShoppingCart/CartDetails")'">Check Cart</button>
+                ;
+                break;
+            default: // Available
+                <button class="btn btn-primary" name="btnBuyIt" data-id="@Model.Id">Add to Cart</button>
+                ;
+                break;
+        }
+    </div>
+
+    <h2>Sections</h2>
+    @foreach (var sec in Model.Sections)
+    {
+        <div class="section">
+            <h3>@sec.Title</h3>
+            <p>Total Lessons: @sec.Lessons</p>
+            <h4>Quizzes</h4>
+            <ul>
+                @foreach (var quiz in sec.Quizzes)
+                {
+                    <li>
+                        @quiz.Name - Total Questions: @quiz.Questions
+                    </li>
+                }
+            </ul>
+        </div>
+    }
+    <div>
+        <div class="col-md-8 ratings-card" id="rating-list">
+            <h3>Ratings</h3>
+            @await Component.InvokeAsync("RatingList", new { courseId = Model.Id })
+        </div>
+    </div>
+    <a href="@Url.Action("ProductList", "Course")" class="btn btn-primary">Back to Courses</a>
+</div>
+
+@section Scripts {
+    <script>
+        function reloadRatingList(courseId, currentPage = 1) {
+            $.ajax({
+                type: "GET",
+                url: "/Course/ReloadRatingList",
+                data: { courseId, currentPage },
+                success: function (data) {
+                    let divRatingList = document.getElementById("rating-list");
+                    if (divRatingList) {
+                        divRatingList.innerHTML = data;
+                    }
+                },
+                error: function (err) {
+                },
+                completed: function (e) {
+                }
+            });
+        }
+
+        //Document Ready
+        document.addEventListener("DOMContentLoaded", () => {
+            const addToCartButton = document.querySelector('button[name="btnBuyIt"]');
+
+            if (addToCartButton) {
+                addToCartButton.addEventListener("click", function (event) {
+                    const courseId = addToCartButton.dataset.id;
+
+                    buyIt(courseId);
+                });
+            }
+        });
+        function buyIt(courseId) {
+            $.ajax({
+                type: 'POST',
+                url: '/ShoppingCart/AddToCart',
+                data: { courseId },
+                beforeSend: function () {
+                    //=== Disable clickable buttons ===//
+                },
+                success: function (data) {
+                    console.log('buyIt', { data });
+                    let button = document.querySelector(`button[data-id="${courseId}"]`);
+                    if (button) {
+                        // Change button text and style
+                        button.textContent = "Check Cart";
+                        button.className = "btn btn-warning";
+                        button.onclick = function () {
+                            window.location.href = "/ShoppingCart/CartDetails";
+                        };
+
+                        // Remove "Add to Cart" specific attributes
+                        button.removeAttribute("name");
+                        button.removeAttribute("data-id");
+                    }
+
+                    updateShoppingCartDiv(data.shoppingCart);
+                    // let shoppingCart = document.getElementById("shopping-cart");
+                    // if (shoppingCart) {
+                    //     let currentNumber = parseInt(shoppingCart.textContent);
+                    //     shoppingCart.textContent = data.shoppingCart.quantity;
+                    //     // shoppingCart.textContent = currentNumber + 1;
+                    // }
+                },
+                error: function (err) {
+                    //=== Step 5: Displaying error message ===//
+                    console.log('buyIt Error', { err });
+
+                },
+                complete: function () {
+
+                },
+            });
+        }
+    </script>
+}

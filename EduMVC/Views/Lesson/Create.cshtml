@@ -1,0 +1,196 @@
+﻿@model EduMVC.ViewModels.LessonViewModel
+@{
+    ViewData["Title"] = "Manage Lesson";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isCreate = Model == null || Model.Id == Guid.Empty;
+    var actionString = isCreate ? "Create" : "Edit";
+    var buttonString = isCreate ? "Create" : "Edit";
+}
+
+<h1>Section Details</h1>
+<div>
+    <h3>@Model.SectionName</h3>
+</div>
+<hr />
+<h2>Manage lesson</h2>
+<form asp-action="@actionString" enctype="multipart/form-data">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="Id" class="form-control" />
+    <input type="hidden" asp-for="SectionId" class="form-control" />
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group">
+                <label asp-for="Name" class="control-label"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-9 col-xl-10">
+                            <label asp-for="MediumFile" class="control-label">Video</label>
+                            <fieldset class="form-group">
+                                <div class="custom-file">
+                                    <input asp-for="MediumFile" class="form-control custom-file-input" id="MediumFileInput" />
+                                    <label class="custom-file-label" for="MediumFileInput" aria-describedby="MediumFileInput">Choose file (Max size: 100 MB)</label>
+                                </div>
+                            </fieldset>
+                            <span asp-validation-for="MediumFile" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <label asp-for="DocumentFiles" class="control-label">Resources</label>
+                    <div class="custom-files">
+                        <input asp-for="DocumentFiles" class="form-control custom-files-input" id="DocumentFilesInput" multiple />
+                        <label class="custom-files-label" for="DocumentFilesInput" aria-describedby="DocumentFilesInput">Choose files (Max size: 5 MB per file)</label>
+                    </div>
+                    <span asp-validation-for="DocumentFiles" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group" style="text-align: center;">
+                <input type="submit" value="@buttonString" class="btn btn-primary" />
+                <button type="button" class="btn btn-danger" onclick="cancelEdit('@Url.Action("Create", "Lesson")', '@Model.SectionId')">Cancel</button>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group" style="text-align: right;">
+                <a href="~/Section/Create?courseId=@Model.CourseId" class="btn btn-secondary">Return to sections</a>
+            </div>
+            <div class="form-group">
+                <input type="text" id="searchTerm" class="form-control" placeholder="Search lessons..." />
+                <button type="button" class="btn btn-primary mt-2" onclick="searchLessons('@Model.SectionId')">Search</button>
+            </div>
+            <div id="lesson-list">
+                @await Component.InvokeAsync("LessonList", new { sectionId = Model.SectionId })
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        function cancelEdit(url, sectionId) {
+            window.location.href = url + "?sectionId=" + sectionId;
+        }
+
+        document.querySelector('.custom-file-input').addEventListener('change', function (e) {
+            var fileName = e.target.files[0].name;
+            var label = e.target.nextElementSibling;
+            label.textContent = fileName;
+        });
+
+        document.querySelectorAll('.custom-files-input').forEach(function (input) {
+            input.addEventListener('change', function (e) {
+                var files = e.target.files;
+                var fileNames = Array.from(files).map(file => file.name).join('\n');
+                var label = e.target.nextElementSibling;
+                label.textContent = fileNames || 'Choose file(s)';
+            });
+        });
+
+        function openVideoModal(videoPath) {
+            console.log("Video Path:", videoPath);
+
+            // Set the video source dynamically
+            var videoSource = document.getElementById('videoSource');
+            videoSource.src = videoPath;
+
+            // Load the video and show the modal
+            var modalVideo = document.getElementById('modalVideo');
+            modalVideo.load();
+
+            // Show the modal
+            var videoModal = document.getElementById('videoModal');
+            videoModal.style.display = 'block';
+            videoModal.classList.add('show');
+            videoModal.setAttribute('aria-hidden', 'false');
+        }
+
+        // Close modal and pause video when closing
+        function closeVideoModal() {
+            var videoModal = document.getElementById('videoModal');
+            var modalVideo = document.getElementById('modalVideo');
+
+            // Pause and reset the video
+            modalVideo.pause();
+            modalVideo.currentTime = 0;
+
+            // Hide the modal
+            videoModal.style.display = 'none';
+            videoModal.classList.remove('show');
+            videoModal.setAttribute('aria-hidden', 'true');
+        }
+
+        // Close the modal when clicking outside of it
+        document.addEventListener('click', function (event) {
+            var videoModal = document.getElementById('videoModal');
+
+            if (event.target === videoModal) { // Only close when clicking directly outside the modal content
+                closeVideoModal();
+            }
+        });
+
+        var sectionId = '@Model.SectionId';
+        function deleteLesson(lessonId) {
+
+            $.ajax({
+                type: "POST",
+                url: "/Lesson/Delete",
+                data: { lessonId },
+                success: function (data) {
+                    if (data.status) {
+                        reloadLessonList(sectionId, 1);
+                    }
+                },
+                error: function (err) {
+
+                },
+                completed: function (e) {
+
+                }
+            });
+        }
+
+        function searchLessons(sectionId, currentPage = 1) {
+            var searchTerm = document.getElementById('searchTerm').value;
+            $.ajax({
+                type: "GET",
+                url: "/Lesson/ReloadLessonList",
+                data: { sectionId, currentPage, searchTerm },
+                success: function (data) {
+                    let divLessonList = document.getElementById("lesson-list");
+                    if (divLessonList) {
+                        divLessonList.innerHTML = data;
+                    }
+                },
+                error: function (err) {
+                    console.error(err);
+                }
+            });
+        }
+
+        function reloadLessonList(sectionId, currentPage = 1) {
+
+            $.ajax({
+                type: "GET",
+                url: "/Lesson/ReloadLessonList",
+                data: { sectionId, currentPage },
+                success: function (data) {
+                    let divLessonList = document.getElementById("lesson-list");
+                    if (divLessonList) {
+                        divLessonList.innerHTML = data;
+                    }
+                },
+                error: function (err) {
+
+                },
+                completed: function (e) {
+
+                }
+            });
+        }
+    </script>
+}

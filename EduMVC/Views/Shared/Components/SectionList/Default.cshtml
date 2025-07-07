@@ -1,0 +1,72 @@
+﻿@model List<EduMVC.ViewModels.SectionViewModel>
+@{
+    var currentPage = (int)ViewBag.CurrentPage;
+    var maxPage = (int)ViewBag.MaxPage;
+    var previousPage = currentPage - 1;
+    var nextPage = currentPage + 1;
+}
+<table>
+    <tr>
+        <th width="20%">No.</th>
+        <th width="80%">Title</th>
+    </tr>
+    @if (Model != null && Model.Any())
+    {
+        foreach (var sec in Model)
+        {
+            <tr>
+                <td>@sec.Position</td>
+                <td>@sec.Title</td>
+                <td>
+                    <a href="~/Lesson/Create?sectionId=@sec.Id" class="btn btn-primary">
+                        Lessons
+                    </a>
+                </td>
+                <td>
+                    <a href="~/Quiz/Create?sectionId=@sec.Id" class="btn btn-primary">
+                        Quizzes
+                    </a>
+                </td>
+                <td>
+                    <a href="~/Section/Edit?sectionId=@sec.Id" class="btn btn-primary">
+                        <i class="mbri-edit2"></i>
+                    </a>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger" onclick="deleteSection('@sec.Id')">
+                        <i class="mbri-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    }
+    else
+    {
+        <tr>
+            <td colspan="3">No section created</td>
+        </tr>
+    }
+</table>
+
+<div class="row">
+    <div class="col-md-12" style="text-align: center;">
+        @if (previousPage == 0)
+        {
+            <button type="button" class="paging_button_inactive">Previous</button>
+        }
+        else
+        {
+            <button type="button" class="paging_button" onclick="reloadSectionList('@ViewBag.CourseId' ,@previousPage)">Previous</button>
+        }
+        <button type="button" class="page_circle">@ViewBag.CurrentPage</button>
+
+        @if (maxPage == currentPage)
+        {
+            <button type="button" class="paging_button_inactive">Next</button>
+        }
+        else
+        {
+            <button type="button" class="paging_button" onclick="reloadSectionList('@ViewBag.CourseId' ,@nextPage)">Next</button>
+        }
+    </div>
+</div>

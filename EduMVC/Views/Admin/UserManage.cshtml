@@ -1,0 +1,84 @@
+﻿@{
+    ViewData["Title"] = "Manage User";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+<form id="search-filter-form">
+    <label for="name-search-filter">Search by Name:</label>
+    <input type="text" id="name-search-filter" class="form-control" oninput="filterByName()" placeholder="Enter user name..." />
+
+    <label for="role-filter">Filter by Role:</label>
+    <select id="role-filter" class="form-control" onchange="filterByRole()">
+        <option value="">All</option>
+        <option value="Student">Student</option>
+        <option value="Teacher">Teacher</option>
+        <option value="Admin">Admin</option>
+    </select>
+</form>
+
+<h1>Manage Users</h1>
+<div id="user-list">
+    @await Component.InvokeAsync("UserList")
+</div>
+
+@section Scripts {
+    <script>
+        function filterByName() {
+            var nameSearch = document.getElementById('name-search-filter').value;
+            var selectedRole = document.getElementById('role-filter').value;
+            reloadUserList(1, nameSearch, selectedRole);
+        }
+
+        function filterByRole() {
+            var selectedRole = document.getElementById('role-filter').value;
+            var nameSearch = document.getElementById('name-search-filter').value;
+            reloadUserList(1, nameSearch, selectedRole); 
+        }
+
+        // Function to save the user role and status
+        function saveUserChanges(userId, currentPage) {
+            var selectedRole = $('#role-select-' + userId).val();
+            var selectedStatus = $('#status-select-' + userId).val();
+
+            $.ajax({
+                url: '/Admin/SaveUserChanges',
+                type: 'POST',
+                data: {
+                    userId: userId,
+                    role: selectedRole,
+                    status: selectedStatus
+                },
+                success: function (response) {
+                    if (response.success) {
+                        alert('Changes saved successfully.');
+
+                        // Reload the user list with the current page
+                        reloadUserList(currentPage);
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function () {
+                    alert('Error occurred while saving changes.');
+                }
+            });
+        }
+
+        function reloadUserList(currentPage = 1, nameSearch, roleFilter) {
+            $.ajax({
+                type: "GET",
+                url: "/Admin/ReloadUserList",
+                data: { currentPage, nameSearch, roleFilter },
+                success: function (data) {
+                    let divUserList = document.getElementById("user-list");
+                    if (divUserList) {
+                        divUserList.innerHTML = data;
+                    }
+                },
+                error: function (err) {
+                },
+                completed: function (e) {
+                }
+            });
+        }
+    </script>
+}

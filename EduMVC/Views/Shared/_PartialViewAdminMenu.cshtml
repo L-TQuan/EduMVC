@@ -1,0 +1,17 @@
+﻿@{
+    var currentRoute = Context.Request.Path.Value; 
+}
+
+<div class="main-menu-content">
+    <ul class="navigation navigation-main" id="main-menu-navigation" data-menu="menu-navigation">
+        <li class="nav-item @(currentRoute.Contains("Course/ProductList") ? "active" : "")">
+            <a href="~/Course/ProductList"><i class="mbri-home"></i><span class="menu-title" data-i18n="Home">Home</span></a>
+        </li>
+        <li class="nav-item @(currentRoute.Contains("Admin/UserManage") ? "active" : "")">
+            <a href="~/Admin/UserManage"><i class="mbri-users"></i><span class="menu-title" data-i18n="User Management">Users</span></a>
+        </li>
+        <li class="nav-item @(currentRoute.Contains("Admin/CourseApproval") ? "active" : "")">
+            <a href="~/Admin/CourseApproval"><i class="mbri-like"></i><span class="menu-title" data-i18n="Course Approval" style="white-space: normal; word-wrap: break-word;">Course Approval</span></a>
+        </li>
+    </ul>
+</div>

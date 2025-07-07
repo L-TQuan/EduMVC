@@ -1,0 +1,27 @@
+﻿@* @page
+@model EduMVC.ViewModels.ProfileDocumentViewModel
+@{
+    ViewData["Title"] = "Profile Submission";
+    ViewData["ActivePage"] = ManageNavPages.ProfileSubmission;
+}
+
+<h2>Profile Submission</h2>
+
+<form asp-controller="Teacher" asp-action="ProfileSubmission" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="profileDocumentFile">Upload Profile Document</label>
+        <input type="file" name="documentFile" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Submit Document</button>
+</form>
+
+@if (Model != null)
+{
+    <h3>Uploaded Profile Document</h3>
+    <p><strong>Document Name:</strong> @Model.DisplayName</p>
+    <a href="@Model.Path" target="_blank" class="btn btn-secondary">View Document</a>
+}
+else
+{
+    <p>No profile document uploaded yet.</p>
+} *@

@@ -1,0 +1,118 @@
+﻿@{
+    ViewData["Title"] = "Manage User";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<h1>Course Review</h1>
+<form id="search-filter-form" style="margin-bottom: 20px">
+    <label for="search-filter">Search by Title:</label>
+    <input type="text" id="search-filter" class="form-control" oninput="filterBySearch()" placeholder="Enter course title..." />
+</form>
+
+<form id="status-filter-form">
+    <label for="status-filter">Filter by Status:</label>
+    @Html.DropDownList("status",
+            Enum.GetValues(typeof(EduMVC.Enums.PublishStatus))
+            .Cast<EduMVC.Enums.PublishStatus>()
+            .Where(s => s != EduMVC.Enums.PublishStatus.Draft)
+            .Select(s => new SelectListItem { Value = s.ToString(), Text = s.ToString() }),
+            "All",
+            new { id = "status-filter", onchange = "filterByStatus()", @class = "form-control" })
+</form>
+
+
+<div id="course-admin-list">
+    @await Component.InvokeAsync("CourseAdminList")
+</div>
+
+@section Scripts {
+    <script>
+        function filterByStatus() {
+            var selectedStatus = document.getElementById('status-filter').value;
+            reloadCourseAdminList(1, selectedStatus); // Reset to page 1 when filtering
+        }
+
+        function filterBySearch() {
+            var searchTerm = document.getElementById('search-filter').value;
+            var selectedStatus = document.getElementById('status-filter').value;
+            reloadCourseAdminList(1, selectedStatus, searchTerm); 
+        }
+
+        // Play video on hover
+        function hoverVideoEventListeners() {
+            var courseItems = document.querySelectorAll('.course-image');
+
+            courseItems.forEach(function (courseItem) {
+                var courseId = courseItem.querySelector('video').id.split('_')[1];
+                var previewVideo = document.getElementById('previewVideo_' + courseId);
+                var image = document.getElementById('image_' + courseId);
+                var container = document.getElementById('courseContainer_' + courseId);
+
+                courseItem.addEventListener('mouseenter', function () {
+                    image.style.display = 'none'; // Hide the image
+                    previewVideo.style.display = 'block'; // Show the video
+                    previewVideo.currentTime = 0; // Start the video from the beginning
+                    previewVideo.play(); // Play the video
+                    container.style.width = '400px'; // Adjust size for video
+                    container.style.height = '300px';
+                });
+
+                courseItem.addEventListener('mouseleave', function () {
+                    previewVideo.pause(); // Pause the video
+                    previewVideo.style.display = 'none'; // Hide the video
+                    image.style.display = 'block'; // Show the image
+                    container.style.width = '200px'; // Restore container size
+                    container.style.height = '200px';
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', hoverVideoEventListeners());
+
+        // Save the status
+        function saveCourseStatus(courseId, currentPage) {
+            var selectedStatus = $('#course-status-' + courseId).val();
+            var selectedFilter = $('#status-filter').val();
+
+            $.ajax({
+                url: '/Admin/SaveCourseStatus',
+                type: 'POST',
+                data: {
+                    courseId: courseId,
+                    status: selectedStatus
+                },
+                success: function (response) {
+                    if (response.success) {
+                        alert('Course status updated successfully.');
+                        reloadCourseAdminList(currentPage, selectedFilter);
+                    } else {
+                        alert('Error: ' + response.message);
+                    }
+                },
+                error: function () {
+                    alert('An error occurred while updating the course status.');
+                }
+            });
+        }
+
+        function reloadCourseAdminList(currentPage = 1, status, searchTerm) {
+            $.ajax({
+                type: "GET",
+                url: "/Admin/ReloadCourseList",
+                data: { currentPage, status, searchTerm },
+                success: function (data) {
+                    let divCourseList = document.getElementById("course-admin-list");
+                    if (divCourseList) {
+                        divCourseList.innerHTML = data;
+                    }
+
+                    hoverVideoEventListeners();
+                },
+                error: function (err) {
+                },
+                completed: function (e) {
+                }
+            });
+        }
+    </script>
+}

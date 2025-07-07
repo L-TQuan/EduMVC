@@ -1,0 +1,285 @@
+﻿@model EduMVC.ViewModels.PurchasedCourseSurmmaryVM
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="course-details">
+    <h1>@Model.Title</h1>
+    <p>@Model.Description</p>
+
+    <h2>Course Content</h2>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div id="video-container">
+                <video id="lesson-video" controls style="width: 100%; display:none;">
+                    <source id="video-source" src="" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            <div id="quiz-questions-container" style="display:none;">
+                <h3 id="quiz-title"></h3>
+                <div id="quiz-questions"></div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div id="course-details-list">
+                @await Component.InvokeAsync("CourseDetailsList", new { courseId = Model.Id })
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="rating-section col-md-8">
+    <h2>Rate this Course</h2>
+    <form id="rating-form" method="post">
+        <input type="hidden" name="courseId" value="@Model.Id" />
+        <div class="stars">
+            @for (int i = 1; i <= 5; i++)
+            {
+                <input type="radio" id="star-@i" name="stars" value="@i" style="display:none;" @(Model.UserRating?.UserRatingStars == i ? "checked" : "")/>
+                <label for="star-@i" class="star" data-value="@i">&#9734;</label>
+            }
+        </div>
+        <div class="form-group">
+            <textarea name="comment" id="comment" class="form-control" placeholder="Leave a comment...">@Model.UserRating?.UserComment</textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Save</button>
+    </form>
+</div>
+
+<div class="average-rating col-md-8">
+    <h3 style="display: inline-block; margin-right: 10px;">Average Rating: @Model.AverageRating.ToString("F1")</h3>
+    <div class="stars" style="display: inline-block;">
+        @for (int i = 1; i <= 5; i++)
+        {
+            if (i <= Model.AverageRating)
+            {
+                <span>&#9733;</span> // Filled star
+            }
+            else
+            {
+                <span>&#9734;</span> // Empty star 
+            }
+        }
+    </div>
+</div>
+<div class="col-md-8" id="rating-list">
+    <h3>Ratings</h3>
+    @await Component.InvokeAsync("RatingList", new { courseId = Model.Id })
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const lessonLinks = document.querySelectorAll('.lesson-link');
+            lessonLinks.forEach(link => {
+                link.addEventListener('click', function () {
+                    const mediumPath = this.getAttribute('data-medium-path');
+                    console.log('Medium Path:', mediumPath);
+                    const videoElement = document.getElementById('lesson-video');
+                    const videoSource = document.getElementById('video-source');
+
+                    // Set the video source and show the video
+                    if (mediumPath) {
+                        videoSource.src = mediumPath;
+                        videoElement.load();
+                        videoElement.style.display = 'block';
+                    }
+                });
+            });
+
+            const quizLinks = document.querySelectorAll('.quiz-link');
+            const quizQuestionsContainer = document.getElementById('quiz-questions-container');
+            const quizTitle = document.getElementById('quiz-title');
+            const quizQuestions = document.getElementById('quiz-questions');
+
+            let currentQuestionIndex = 0; // To keep track of the current question
+
+            quizLinks.forEach(link => {
+                link.addEventListener('click', function () {
+                    const quizId = this.getAttribute('data-quiz-id');
+                    const quizName = this.getAttribute('data-quiz-name');
+                    quizTitle.textContent = quizName;
+
+                    const questions = Array.from(this.closest('li').querySelectorAll('.quiz-questions .question'));
+
+                    // Reset and initialize
+                    currentQuestionIndex = 0;
+                    quizQuestions.innerHTML = '';
+                    loadQuestion(questions, currentQuestionIndex); // Load the first question
+
+                    quizQuestionsContainer.style.display = 'block';
+                });
+            });
+
+            function loadQuestion(questions, index) {
+                quizQuestions.innerHTML = ''; // Clear previous question
+
+                // Get the current question's data
+                const questionElement = questions[index];
+                const questionText = questionElement.querySelector('p').textContent;
+                const correctAnswer = questionElement.querySelector('.answer-input').getAttribute('data-correct-answer');
+
+                // Create HTML structure for the question
+                const questionHTML = document.createElement('div');
+                questionHTML.classList.add('question');
+                questionHTML.innerHTML = `
+                            <p class="question-text">${questionText}</p>
+                            <input type="text" class="answer-input" data-correct-answer="${correctAnswer}" />
+                            <button class="check-answer">Check</button>
+                            <span class="feedback" style="display:none;"></span>
+                        `;
+
+                quizQuestions.appendChild(questionHTML);
+
+                // Add navigation buttons
+                const navButtons = document.createElement('div');
+                navButtons.innerHTML = `
+                            <button id="prev-question" ${index === 0 ? 'disabled' : ''}>Previous</button>
+                            <button id="next-question" ${index === questions.length - 1 ? 'disabled' : ''}>Next</button>
+                        `;
+                quizQuestions.appendChild(navButtons);
+
+                // Event listener for "Check" button
+                questionHTML.querySelector('.check-answer').addEventListener('click', function () {
+                    const answerInput = this.previousElementSibling;
+                    const feedback = this.nextElementSibling;
+                    if (answerInput.value.trim().toLowerCase() === correctAnswer.trim().toLowerCase()) {
+                        feedback.textContent = "Correct!";
+                        feedback.style.color = "green";
+                    } else {
+                        feedback.textContent = "Incorrect. Try again.";
+                        feedback.style.color = "red";
+                    }
+                    feedback.style.display = 'block';
+                });
+
+                // Event listener for navigation buttons
+                document.getElementById('prev-question').addEventListener('click', function () {
+                    if (currentQuestionIndex > 0) {
+                        currentQuestionIndex--;
+                        loadQuestion(questions, currentQuestionIndex);
+                    }
+                });
+                document.getElementById('next-question').addEventListener('click', function () {
+                    if (currentQuestionIndex < questions.length - 1) {
+                        currentQuestionIndex++;
+                        loadQuestion(questions, currentQuestionIndex);
+                    }
+                });
+            }
+
+            const stars = document.querySelectorAll('.star');
+            const radioButtons = document.querySelectorAll('input[name="stars"]');
+
+            // Update the visual representation of stars based on the checked state
+            radioButtons.forEach((radioButton) => {
+                if (radioButton.checked) {
+                    const ratingValue = radioButton.value;
+                    stars.forEach((star, index) => {
+                        if (index < ratingValue) {
+                            //star.classList.add('selected');
+                            star.innerHTML = '&#9733;'; // Filled star
+                        } else {
+                            //star.classList.remove('selected');
+                            star.innerHTML = '&#9734;'; // Empty star
+                        }
+                    });
+                }
+            });
+
+            stars.forEach(star => {
+                star.addEventListener('click', function () {
+                    const ratingValue = this.getAttribute('data-value');
+
+                    // Update the visual representation of stars
+                    stars.forEach((s, index) => {
+                        //s.classList.remove('selected');
+                        s.innerHTML = '&#9734;'; // Reset to empty star
+                        if (index < ratingValue) {
+                            //s.classList.add('selected');
+                            s.innerHTML = '&#9733;'; // Change to filled star
+                        }
+                    });
+                });
+
+                star.addEventListener('mouseover', function () {
+                    const ratingValue = this.getAttribute('data-value');
+                    stars.forEach((s, index) => {
+                        s.innerHTML = index < ratingValue ? '&#9733;' : '&#9734;'; // Filled star on hover
+                    });
+                });
+
+                // Reset visual feedback on mouse leave
+                star.addEventListener('mouseout', function () {
+                    const checkedStar = document.querySelector('input[name="stars"]:checked');
+                    const checkedValue = checkedStar ? checkedStar.value : 0;
+
+                    stars.forEach((s, index) => {
+                        s.innerHTML = index < checkedValue ? '&#9733;' : '&#9734;'; // Reset to checked state
+                    });
+                });
+            });
+
+            var form = document.getElementById('rating-form');
+            form.addEventListener('submit', function (event) {
+                event.preventDefault(); // Prevent the default form submission
+
+                var formData = new FormData(form);
+                var courseId = '@Model.Id';
+
+                // Send the form data using AJAX
+                $.ajax({
+                    type: "POST",
+                    url: "/Course/SubmitRating", 
+                    data: formData,
+                    processData: false, // Prevent jQuery from processing the data
+                    contentType: false, // Prevent jQuery from setting the content type
+                    success: function (response) {
+                        reloadRatingList(courseId);
+
+                        // Update the average rating displayed on the page
+                        document.querySelector('.average-rating h3').textContent = "Average Rating: " + response.averageRating.toFixed(1);
+
+                        // Update the stars display
+                        const starsContainer = document.querySelector('.average-rating .stars');
+                        starsContainer.innerHTML = ''; // Clear existing stars
+                        for (let i = 1; i <= 5; i++) {
+                            if (i <= response.averageRating) {
+                                starsContainer.innerHTML += '<span>&#9733;</span>'; // Filled star
+                            } else {
+                                starsContainer.innerHTML += '<span>&#9734;</span>'; // Empty star
+                            }
+                        }
+                    },
+                    error: function (err) {
+                        console.error("Error submitting rating:", err);
+                    }
+                });
+            });
+        });
+
+        function reloadRatingList(courseId, currentPage = 1) {
+            $.ajax({
+                type: "GET",
+                url: "/Course/ReloadRatingList",
+                data: { courseId, currentPage },
+                success: function (data) {
+                    let divRatingList = document.getElementById("rating-list");
+                    if (divRatingList) {
+                        divRatingList.innerHTML = data;
+                    }
+                },
+                error: function (err) {
+                },
+                completed: function (e) {
+                }
+            });
+        }
+    </script>
+}
+
+

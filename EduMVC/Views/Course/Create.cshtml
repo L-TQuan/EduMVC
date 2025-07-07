@@ -1,0 +1,197 @@
+﻿@model EduMVC.ViewModels.CourseViewModel
+@{
+    ViewData["Title"] = "Manage Course";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isCreate = Model == null || Model.Id == Guid.Empty;
+    var actionString = isCreate ? "Create" : "Edit";
+    var buttonString = isCreate ? "Create" : "Edit";
+}
+
+<h1>Manage</h1>
+
+<h4>Course</h4>
+<hr />
+<form asp-action="@actionString" enctype="multipart/form-data">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="Id" class="form-control" />
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-9 col-xl-10">
+                            <label asp-for="ImageFile" class="control-label">Course Image</label>
+                            <fieldset class="form-group">
+                                <div class="custom-file">
+                                    <input asp-for="ImageFile" class="form-control custom-file-input" id="ImageFileInput" />
+                                    <label class="custom-file-label" for="ImageFileInput" aria-describedby="ImageFileInput">Choose file (Max size: 5 MB)</label>
+                                </div>
+                            </fieldset>
+                            <span asp-validation-for="ImageFile" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <label asp-for="Title" class="control-label"></label>
+                    <fieldset class="form-group">
+                        <input asp-for="Title" class="form-control" />
+                    </fieldset>
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-9 col-xl-10">
+                            <label asp-for="PreviewMediumFile" class="control-label">Preview Video</label>
+                            <fieldset class="form-group">
+                                <div class="custom-file">
+                                    <input asp-for="PreviewMediumFile" class="form-control custom-file-input" id="PreviewMediumFileInput" />
+                                    <label class="custom-file-label" for="PreviewMediumFileInput" aria-describedby="PreviewMediumFileInput">Choose file (Max size: 10 MB)</label>
+                                </div>
+                            </fieldset>
+                            <span asp-validation-for="PreviewMediumFile" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <label asp-for="Price" class="control-label"></label>
+                    <fieldset class="form-group">
+                        <input asp-for="Price" class="form-control" />
+                    </fieldset>
+                    <span asp-validation-for="Price" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="card mt-3">
+                <div class="card-body">
+                    <label asp-for="Description" class="control-label"></label>
+                    <fieldset class="form-group">
+                        <textarea rows="5" asp-for="Description" class="form-control"></textarea>
+                    </fieldset>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group" style="text-align: center;">
+                <input type="submit" value="@buttonString" class="btn btn-primary" />
+                <button type="button" class="btn btn-danger" onclick="cancelEdit('@Url.Action("Create", "Course")')">Cancel</button>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+                <input type="text" id="searchTerm" class="form-control" placeholder="Search courses..." />
+                <button type="button" class="btn btn-primary mt-2" onclick="searchCourses()">Search</button>
+            </div>
+            <div id="course-list">
+                @await Component.InvokeAsync("CourseList")
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        document.querySelectorAll('.custom-file-input').forEach(function(input) {
+            input.addEventListener('change', function (e) {
+                var fileName = e.target.files[0]?.name; // Ensure the file exists before accessing .name
+                var label = e.target.nextElementSibling;
+                if (label) {
+                    label.textContent = fileName;
+                }
+            });
+        });
+
+        function openVideoModal(videoPath) {
+            console.log("Video Path:", videoPath);
+
+            // Set the video source dynamically
+            var videoSource = document.getElementById('videoSource');
+            videoSource.src = videoPath;
+
+            // Load the video and show the modal
+            var modalVideo = document.getElementById('modalVideo');
+            modalVideo.load();
+
+            // Show the modal
+            $('#videoModal').modal('show');
+        }
+
+        function publishCourse(courseId) {
+            if (confirm("Are you sure you want to publish this course?")) {
+                $.ajax({
+                    url: '@Url.Action("PublishCourse", "Course")', 
+                    type: 'POST',
+                    data: { id: courseId },
+                    success: function (result) {
+                        reloadCourseList();
+                    },
+                    error: function (err) {
+                        alert("An error occurred while publishing the course.");
+                    }
+                });
+            }
+        }
+
+        function cancelEdit(url) {
+            window.location.href = url;
+        }
+
+        function deleteCourse(courseId) {
+
+            $.ajax({
+                type: "POST",
+                url: "/Course/Delete",
+                data: { courseId },
+                success: function (data) {
+                    if (data.status) {
+                        reloadCourseList();
+                    }
+                },
+                error: function (err) {
+                },
+                completed: function (e) {
+                }
+            });
+        }
+
+        function searchCourses(currentPage = 1) {
+            var searchTerm = document.getElementById('searchTerm').value;
+            $.ajax({
+                type: "GET",
+                url: "/Course/ReloadCourseList",
+                data: { currentPage, searchTerm },
+                success: function (data) {
+                    let divCourseList = document.getElementById("course-list");
+                    if (divCourseList) {
+                        divCourseList.innerHTML = data;
+                    }
+                },
+                error: function (err) {
+                    console.error(err);
+                }
+            });
+        }
+
+        function reloadCourseList(currentPage = 1) {
+            $.ajax({
+                type: "GET",
+                url: "/Course/ReloadCourseList",
+                data: { currentPage },
+                success: function (data) {
+                    let divCourseList = document.getElementById("course-list");
+                    if (divCourseList) {
+                        divCourseList.innerHTML = data;
+                    }
+                },
+                error: function (err) {
+                },
+                completed: function (e) {
+                }
+            });
+        }
+    </script>
+}
+

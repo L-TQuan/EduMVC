@@ -1,0 +1,171 @@
+﻿@model EduMVC.ViewModels.QuestionViewModel
+@{
+    ViewData["Title"] = "Manage Question";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var isCreate = Model == null || Model.Id == Guid.Empty;
+    var actionString = isCreate ? "Create" : "Edit";
+    var buttonString = isCreate ? "Create" : "Edit";
+}
+
+<div>
+    <h3>@Model.QuizName</h3>
+    <h2>@Model.QuizDescription</h2>
+</div>
+<hr />
+<h2>Manage question</h2>
+<form asp-action="@actionString" enctype="multipart/form-data">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="Id" class="form-control" />
+    <input type="hidden" asp-for="QuizId" class="form-control" />
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mt-3">
+                <div class="card-body">
+                    <label asp-for="Text" class="control-label"></label>
+                    <fieldset class="form-group">
+                        <textarea asp-for="Text" class="form-control"></textarea>
+                    </fieldset>
+                    <span asp-validation-for="Text" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="card mt-3">
+                <div class="card-body">
+                    <label asp-for="CorrectAnswer" class="control-label">Correct Answer</label>
+                    <fieldset class="form-group">
+                        <textarea asp-for="CorrectAnswer" class="form-control"></textarea>
+                    </fieldset>
+                    <span asp-validation-for="CorrectAnswer" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="form-group mt-3" style="text-align: center;">
+                <input type="submit" value="@buttonString" class="btn btn-primary" />
+            </div>
+            <button type="button" class="btn btn-danger" onclick="cancelEdit('@Url.Action("Create", "Question")', '@Model.QuizId')">Cancel</button>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group" style="text-align: right;">
+                <a href="~/Quiz/Create?sectionId=@Model.SectionId" class="btn btn-secondary">Return to quizzes</a>
+            </div>
+            <div class="form-group">
+                <input type="text" id="searchTerm" class="form-control" placeholder="Search questions..." />
+                <button type="button" class="btn btn-primary mt-2" onclick="searchQuestions('@Model.QuizId')">Search</button>
+            </div>
+            <div id="question-list">
+                @await Component.InvokeAsync("QuestionList", new { quizId = Model.QuizId })
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        function cancelEdit(url, quizId) {
+            window.location.href = url + "?quizId=" + quizId;
+        }
+
+        // Show/Hide the full text and toggle between "Read More" and "Read Less"
+        function showFullText(button) {
+            var container = button.closest('td').previousElementSibling.querySelector('.question-text-container');
+            var shortText = container.querySelector(".short-text"); // Get the short text span
+            var fullText = container.querySelector(".full-text"); // Get the full text span
+
+            if (fullText.style.display === "none") {
+                shortText.style.display = "none";
+                fullText.style.display = "block";
+                button.textContent = "Read Less";
+            } else {
+                shortText.style.display = "block";
+                fullText.style.display = "none";
+                button.textContent = "Read More";
+            }
+        }
+
+        function toggleAnswer(button) {
+            // Find the nearest answer row and toggle its visibility
+            var answerRow = button.closest('tr').nextElementSibling;
+            if (answerRow.style.display === "none") {
+                answerRow.style.display = "table-row";
+            } else {
+                answerRow.style.display = "none";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            // Find all question text containers and check if Read More is needed
+            var questionContainers = document.querySelectorAll(".question-text-container");
+            questionContainers.forEach(function (container) {
+                var shortText = container.querySelector(".short-text");
+                var fullText = container.querySelector(".full-text");
+                var readMoreButton = container.closest('td').nextElementSibling.querySelector(".read-more");
+
+                // Check if the text is overflowing
+                if (shortText.scrollWidth > shortText.clientWidth) {
+                    readMoreButton.style.display = "inline"; // Show Read More button
+                } else {
+                    readMoreButton.style.display = "none"; // Hide if not needed
+                }
+            });
+        });
+
+        var quizId = '@Model.QuizId';
+        function deleteQuestion(questionId) {
+
+            $.ajax({
+                type: "POST",
+                url: "/Question/Delete",
+                data: { questionId },
+                success: function (data) {
+                    if (data.status) {
+                        reloadQuestionList(quizId, 1);
+                    }
+                },
+                error: function (err) {
+
+                },
+                completed: function (e) {
+
+                }
+            });
+        }
+
+        function searchQuestions(quizId, currentPage = 1) {
+            var searchTerm = document.getElementById('searchTerm').value;
+            $.ajax({
+                type: "GET",
+                url: "/Question/ReloadQuestionList",
+                data: { quizId, currentPage, searchTerm },
+                success: function (data) {
+                    let divQuestionList = document.getElementById("question-list");
+                    if (divQuestionList) {
+                        divQuestionList.innerHTML = data;
+                    }
+                },
+                error: function (err) {
+                    console.error(err);
+                }
+            });
+        }
+
+        function reloadQuestionList(quizId, currentPage = 1) {
+
+            $.ajax({
+                type: "GET",
+                url: "/Question/ReloadQuestionList",
+                data: { quizId, currentPage },
+                success: function (data) {
+                    let divQuestionList = document.getElementById("question-list");
+                    if (divQuestionList) {
+                        divQuestionList.innerHTML = data;
+                    }
+                },
+                error: function (err) {
+
+                },
+                completed: function (e) {
+
+                }
+            });
+        }
+    </script>
+}
+

@@ -1,0 +1,68 @@
+﻿@model List<EduMVC.ViewModels.QuizViewModel>
+@{
+    var currentPage = (int)ViewBag.CurrentPage;
+    var maxPage = (int)ViewBag.MaxPage;
+    var previousPage = currentPage - 1;
+    var nextPage = currentPage + 1;
+}
+<table>
+    <tr>
+        <th width="20%">No.</th>
+        <th width="80%">Name</th>
+    </tr>
+    @if (Model != null && Model.Any())
+    {
+        foreach (var quiz in Model)
+        {
+            <tr>
+                <td>@quiz.Position</td>
+                <td>@quiz.Name</td>
+                <td>
+                    <a href="~/Question/Create?quizId=@quiz.Id" class="btn btn-primary">
+                        Questions
+                    </a>
+                </td>
+                <td>
+                    <a href="~/Quiz/Edit?quizId=@quiz.Id" class="btn btn-primary">
+                        <i class="mbri-edit2"></i>
+                    </a>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger" onclick="deleteQuiz('@quiz.Id')">
+                        <i class="mbri-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+    }
+    else
+    {
+        <tr>
+            <td colspan="3">No quiz created</td>
+        </tr>
+    }
+</table>
+
+<div class="row">
+    <div class="col-md-12" style="text-align: center;">
+        @if (previousPage == 0)
+        {
+            <button type="button" class="paging_button_inactive">Previous</button>
+        }
+        else
+        {
+            <button type="button" class="paging_button" onclick="reloadQuizList('@ViewBag.SectionId' ,@previousPage)">Previous</button>
+        }
+        <button type="button" class="page_circle">@ViewBag.CurrentPage</button>
+
+        @if (maxPage == currentPage)
+        {
+            <button type="button" class="paging_button_inactive">Next</button>
+        }
+        else
+        {
+            <button type="button" class="paging_button" onclick="reloadQuizList('@ViewBag.SectionId' ,@nextPage)">Next</button>
+        }
+    </div>
+</div>
+

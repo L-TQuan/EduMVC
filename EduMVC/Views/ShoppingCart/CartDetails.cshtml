@@ -1,0 +1,120 @@
+﻿@model List<EduMVC.ViewModels.CourseSummaryVM>
+@{
+    ViewData["Title"] = "CartDetails";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>CartDetails</h1>
+
+@if(Model != null){
+    <table class="table">
+        <thead>
+            <tr>
+                <th width="10%"></th>
+                <th width="30%">Courses</th>
+                <th width="15%">Price</th>
+                <th width="15%">Teacher</th>
+                <th width="15%">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="tBodyShoppingCart">
+            <partial name="_ShoppingCart" model="@Model" />
+        </tbody>
+    </table>
+
+    <div id="formPayment" style="text-align: center;">
+        <div style="text-align: center;">
+            <button type="button" onclick="payForProducts()" class="btn btn-success">Proceed</button>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+        });
+        function removeCourseFromCart(courseId) {
+            $.ajax({
+                type: "POST",
+                url: "/ShoppingCart/RemoveFromCart",
+                data: { courseId },
+                success: function (data) {
+                    reloadShoppingCart();
+                },
+                error: function (err) {
+                    alert("Error removing course from cart.");
+                    console.log(err);
+                }
+            });
+        }
+
+        function reloadShoppingCart() {
+            $.ajax({
+                url: "/ShoppingCart/ReloadShoppingCart",
+                // data: { idProduct: idProduct },
+                type: "GET",
+                success: function (data) {
+                    //=== Update Detail ==//
+                    let tBodyShoppingCart = document.getElementById("tBodyShoppingCart");
+                    if (tBodyShoppingCart) {
+                        tBodyShoppingCart.innerHTML = data;
+                    }
+                },
+                error: function (xhr, status, error) {
+                    // Show detailed error in console for debugging
+                    console.error("Error reloading shopping cart:", xhr.responseText);
+                    alert("Failed to reload the shopping cart. Please try again.");
+                },
+                complete: function () {
+                    //=== close loading ===//
+                }
+            });
+        }
+        // function payForProducts() { }
+        const payForProducts = () => {
+
+            $.ajax({
+                url: "/ShoppingCart/MakePayment",
+                type: "GET",
+                success: function (data) {
+                    console.log("Payment information retrieved successfully:", data);
+                    let divFormPayment = document.getElementById("formPayment");
+                    if (divFormPayment) {
+                        divFormPayment.innerHTML = data; // Update the inner HTML with the response data
+                    } else {
+                        console.error("divFormPayment not found");
+                    }
+                },
+                error: function (err) {
+                    console.error("Error occurred while processing payment: " + err);
+                    alert("An error occurred while processing your payment. Please try again.");
+                },
+                complete: function () {
+                    //=== Close loading indicator ===//
+                }
+            });
+        }
+        const createOrder = () => {
+            let orderDateElement = document.getElementById("OrderDate");
+            let orderData = {
+                orderDate: orderDateElement.value
+            }
+            $.ajax({
+                url: "/ShoppingCart/CreateOrder",
+                data: { orderVM: orderData },
+                type: "POST",
+                success: function (data) {
+                    //=== Move to main page ===//
+                    // window.location.href = data.url;
+                    window.location.href = "/Course/ProductList";
+                },
+                error: function (err) {
+                    alert(err);
+                },
+                complete: function () {
+                    //=== close loading ===//
+                }
+            });
+        }
+    </script>
+}

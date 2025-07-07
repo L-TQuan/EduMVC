@@ -1,0 +1,104 @@
+﻿@model IEnumerable<EduMVC.ViewModels.PurchasedCourseVM>
+@{
+    ViewData["Title"] = "Course";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@using EduMVC.Enums
+<h2>My learning</h2>
+
+<form id="search-filter-form" style="margin-bottom: 20px">
+    <label for="search-filter">Search by Title:</label>
+    <input type="text" id="search-filter" class="form-control" oninput="filterBySearch()" placeholder="Enter course title..." />
+</form>
+
+<h3>All courses</h3>
+<div id="divCourseStore" class="product-list">
+    @foreach (var course in Model)
+    {
+        if (course.PublishStatus == PublishStatus.Published)
+        {
+            <a href="~/Course/Details?courseId=@course.Id" class="course-link">
+                <div class="product-item" id="productItem_@course.Id">
+                    <div class="course-image" id="courseContainer_@course.Id">
+                        <img name="audioImage"
+                             src="@Url.Content(!string.IsNullOrEmpty(course.ImagePath) ? course.ImagePath : "~/images/course_icon.png")"
+                             alt="@course.Title"
+                             style="width: 100%; height: auto;"
+                             id="image_@course.Id" />
+
+                        <!-- Video Preview Element -->
+                        <video id="previewVideo_@course.Id" style="display: none;" loop>
+                            <source src="@Url.Content(course.PreviewVideoPath)" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                    <h3>@course.Title</h3>
+                    <p>By: @course.OwnerName</p>
+                </div>
+            </a>
+        }
+        else
+        {
+            <div class="product-item disabled-course" id="productItem_@course.Id">
+                <!-- Image Placeholder -->
+                <div class="course-image" id="courseContainer_@course.Id">
+                    <img name="audioImage"
+                         src="@Url.Content(!string.IsNullOrEmpty(course.ImagePath) ? course.ImagePath : "~/images/course_icon.png")"
+                         alt="@course.Title"
+                         style="width: 100%; height: auto;"
+                         id="image_@course.Id" />
+                </div>
+                <h3>@course.Title</h3>
+                <p>By: @course.OwnerName</p>
+                <strong>Updating...</strong>
+            </div>
+        }
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function filterBySearch() {
+            var searchName = document.getElementById('search-filter').value;
+            // Redirect to the same action with the search parameter
+            window.location.href = '@Url.Action("MyLearning", "Course")?searchName=' + encodeURIComponent(searchName);
+        }
+
+        // Play video on hover
+        document.addEventListener('DOMContentLoaded', function () {
+            var productItems = document.querySelectorAll('.course-image');
+
+            productItems.forEach(function (courseItem) {
+                var courseId = courseItem.querySelector('video').id.split('_')[1];
+                var previewVideo = document.getElementById('previewVideo_' + courseId);
+                var image = document.getElementById('image_' + courseId);
+                var container = document.getElementById('courseContainer_' + courseId);
+                var productDiv = document.getElementById('productItem_' + courseId);
+
+                courseItem.addEventListener('mouseenter', function () {
+                    image.style.display = 'none'; // Hide the image
+                    previewVideo.style.display = 'block'; // Show the video
+                    previewVideo.currentTime = 0; // Start the video from the beginning
+                    previewVideo.play(); // Play the video
+
+                    // Expand container size to fit the video
+                    container.style.width = '400px';
+                    container.style.height = '300px';
+                    productDiv.classList.add('expanded'); // Increase product div size
+                });
+
+                courseItem.addEventListener('mouseleave', function () {
+                    previewVideo.pause(); // Pause the video
+                    previewVideo.style.display = 'none'; // Hide the video
+                    image.style.display = 'block'; // Show the image
+
+                    // Restore container size
+                    container.style.width = '200px';
+                    container.style.height = '200px';
+                    productDiv.classList.remove('expanded'); // Reset product div size
+                });
+            });
+        });
+    </script>
+}

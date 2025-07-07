@@ -1,0 +1,106 @@
+﻿@using System.IO
+@model List<EduMVC.ViewModels.LessonViewModel>
+@{
+    var currentPage = (int)ViewBag.CurrentPage;
+    var maxPage = (int)ViewBag.MaxPage;
+    var previousPage = currentPage - 1;
+    var nextPage = currentPage + 1;
+}
+<table>
+    <tr>
+        <th width="20%">No.</th>
+        <th width="80%">Name</th>
+    </tr>
+    @if (Model != null && Model.Any())
+    {
+        foreach (var lesson in Model)
+        {
+            <tr>
+                <td>@lesson.Position</td>
+                <td>@lesson.Name</td>
+                <td>
+                    <a href="~/Lesson/Edit?lessonId=@lesson.Id" class="btn btn-primary">
+                        <i class="mbri-edit2"></i>
+                    </a>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-danger" onclick="deleteLesson('@lesson.Id')">
+                        <i class="mbri-trash"></i>
+                    </button>
+                </td>
+                <td>
+                    <button type="button" class="btn btn-primary">
+                        <i class="mbri-video" style="cursor:pointer;" onclick="openVideoModal('@Url.Content(lesson.MediumPath)')"></i>
+                    </button>
+                </td>
+                @if (lesson.Documents != null && lesson.Documents.Any())
+                {
+                    <td class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button"
+                                id="dropdownMenuButton-@lesson.Id"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="mbri-opened-folder"></i> Resources
+                        </button>
+
+                        <div id="docs-@lesson.Id" class="dropdown-menu" aria-labelledby="dropdownMenuButton-@lesson.Id">
+                            @foreach (var doc in lesson.Documents)
+                            {
+                                <a class="dropdown-item document-name" href="@Url.Content(doc.Path)" download="@doc.DisplayName">
+                                    @doc.DisplayName
+                                </a>
+                            }
+                        </div>
+                    </td>
+                }
+            </tr>
+        }
+    }
+    else
+    {
+        <tr>
+            <td colspan="3">No lesson created</td>
+        </tr>
+    }
+</table>
+
+<div id="videoModal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Lesson Video</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" onclick="closeVideoModal()">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <video id="modalVideo" class="video-player" controls>
+                    <source id="videoSource" src="" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12" style="text-align: center;">
+        @if (previousPage == 0)
+        {
+            <button type="button" class="paging_button_inactive">Previous</button>
+        }
+        else
+        {
+            <button type="button" class="paging_button" onclick="reloadLessonList('@ViewBag.SectionId' ,@previousPage)">Previous</button>
+        }
+        <button type="button" class="page_circle">@ViewBag.CurrentPage</button>
+
+        @if (maxPage == currentPage)
+        {
+            <button type="button" class="paging_button_inactive">Next</button>
+        }
+        else
+        {
+            <button type="button" class="paging_button" onclick="reloadLessonList('@ViewBag.SectionId' ,@nextPage)">Next</button>
+        }
+    </div>
+</div>

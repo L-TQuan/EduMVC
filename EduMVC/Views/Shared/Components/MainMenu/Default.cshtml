@@ -1,0 +1,36 @@
+﻿@model EduMVC.ViewModels.MainMenuViewModel
+@{
+    var currentRoute = Context.Request.Path.Value;
+}
+
+<div class="main-menu-content">
+    <ul class="navigation navigation-main" id="main-menu-navigation" data-menu="menu-navigation">
+        <li class="nav-item @(currentRoute.Contains("Course/ProductList") ? "active" : "")">
+            <a href="~/Course/ProductList"><i class="mbri-home"></i><span class="menu-title" data-i18n="Home">Home</span></a>
+        </li>
+        @if (User.IsInRole("Admin"))
+        {
+            <li class="nav-item @(currentRoute.Contains("Admin/UserManage") ? "active" : "")">
+                <a href="~/Admin/UserManage"><i class="mbri-preview"></i><span class="menu-title" data-i18n="User Management">Admin Page</span></a>
+            </li>
+        }
+        @if (User.IsInRole("Teacher") && Model.IsTeacherApproved)
+        {
+            <li class="nav-item @(currentRoute.Contains("Course/Create") ? "active" : "")">
+                <a href="~/Course/Create"><i class="mbri-bulleted-list"></i><span class="menu-title" data-i18n="Course">My Course</span></a>
+            </li>
+        }
+        @if (User.Identity.IsAuthenticated)
+        {
+            <li class="nav-item @(currentRoute.Contains("Course/MyLearning") ? "active" : "")">
+                <a href="~/Course/MyLearning"><i class="mbri-video"></i><span class="menu-title" data-i18n="Course">My Learning</span></a>
+            </li>
+        }
+        else
+        {
+            <li class="nav-item">
+                <a href="~/Identity/Account/Login"><i class="mbri-video"></i><span class="menu-title" data-i18n="Course">My Learning</span></a>
+            </li>
+        }
+    </ul>
+</div>

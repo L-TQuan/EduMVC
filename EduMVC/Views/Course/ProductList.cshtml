@@ -1,0 +1,229 @@
+﻿@using EduMVC.Enums
+@model EduMVC.ViewModels.ProductListVM
+@{
+    ViewData["Title"] = "Course";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@if (Model.IsTeacher && Model.TeacherStatus == TeacherStatusEnum.Pending)
+{
+    <div class="alert alert-info">
+        <p>Your application to become a teacher is currently pending. Please complete your profile to upload your courses.</p>
+        <a href="~/Identity/Account/Manage/ProfileSubmission" class="btn btn-primary">Complete Your Profile</a>
+    </div>
+}
+
+<form asp-action="ProductList" method="get">
+    <div class="search-container">
+        <input type="text" name="SearchName" placeholder="Search courses..." />
+        <input type="number" name="MinPrice" placeholder="Min Price" />
+        <input type="number" name="MaxPrice" placeholder="Max Price" />
+        <button type="submit">Search</button>
+    </div>
+</form>
+
+<h2>Available Courses</h2>
+
+<div id="divCourseStore" class="product-list">
+    @foreach (var course in Model.Courses)
+    {
+        <a href="~/Course/SummaryDetails?courseId=@course.Id" class="course-link">
+            <div class="product-item" id="productItem_@course.Id">
+                <!-- Image Placeholder -->
+                <div class="course-image" id="courseContainer_@course.Id">
+                    <img name="audioImage"
+                         src="@Url.Content(!string.IsNullOrEmpty(course.ImagePath) ? course.ImagePath : "~/images/course_icon.png")"
+                         alt="@course.Title"
+                         style="width: 100%; height: auto;"
+                         id="image_@course.Id" />
+
+                    <!-- Video Preview Element -->
+                    <video id="previewVideo_@course.Id" style="display: none;" loop>
+                        <source src="@Url.Content(course.PreviewVideoPath)" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <h3>@course.Title</h3>
+                <p>By: @course.OwnerName</p>
+                <p>$ @course.Price</p>
+                @switch (course.Status)
+                {
+                    case CourseStatusEnum.Owned:
+                        <button class="btn btn-success" onclick="window.location.href='@Url.Content("~/Course/Create")'">My Course</button>
+                        ;
+                        break;
+                    case CourseStatusEnum.Purchased:
+                        <button class="btn btn-secondary" onclick="window.location.href='@Url.Content("~/Course/MyLearning")'">Purchased</button>
+                        ;
+                        break;
+                    case CourseStatusEnum.InCart:
+                        <button class="btn btn-warning" onclick="window.location.href='@Url.Content("~/ShoppingCart/CartDetails")'">Check Cart</button>
+                        ;
+                        break;
+                    default: // Available
+                        <button class="btn btn-primary" @* onclick="buyIt('@course.Id')" *@ name="btnBuyIt" data-id="@course.Id">Add to Cart</button>
+                        ;
+                        break;
+                }
+            </div>
+        </a>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Document Ready
+        let audioTag = null;
+        document.addEventListener("DOMContentLoaded", () => {
+            const buttons = document.querySelectorAll('.product-item button');
+
+            buttons.forEach(button => {
+                button.addEventListener('click', function (event) {
+                    event.stopPropagation(); // Prevent the click from propagating to the parent link
+                    //Prevent default action 
+                    event.preventDefault(); 
+                });
+            });
+
+            let divCourseStore = document.getElementById("divCourseStore");
+            let arrayImage = divCourseStore.querySelectorAll("img[name='audioImage']");
+            if (arrayImage != null && arrayImage.length > 0) {
+                for (let i = 0; i < arrayImage.length; i++) {
+                    let image = arrayImage[i];
+                    image.addEventListener("click", function () {
+                        if (audioTag) audioTag.pause();
+                        audioTag = image.nextElementSibling;
+                        if (audioTag) audioTag.play();
+                    })
+                }
+            }
+            let arrayBuyItButton = divCourseStore.querySelectorAll('button[name="btnBuyIt"]');
+            if (arrayBuyItButton && arrayBuyItButton.length > 0) {
+                for (let i = 0; i < arrayBuyItButton.length; i++) {
+                    let buttonBuyIt = arrayBuyItButton[i];
+                    buttonBuyIt.addEventListener("click", function (event) {
+                        let courseId = event.target.dataset.id;
+                        buyIt(courseId);
+                        // Only call animateProduct if the button is "Add to Cart"
+                        if (event.target.textContent === "Add to Cart") {
+                            animateProduct(event.target);
+                        }
+                    });
+                }
+            }
+        });
+        function buyIt(courseId) {
+            $.ajax({
+                type: 'POST',
+                url: '/ShoppingCart/AddToCart',
+                data: { courseId },
+                beforeSend: function () {
+                    //=== Disable clickable buttons ===//
+                },
+                success: function (data) {
+                    console.log('buyIt', { data });
+                    let button = document.querySelector(`button[data-id="${courseId}"]`);
+                    if (button) {
+                        // Change button text and style
+                        button.textContent = "Check Cart";
+                        button.className = "btn btn-warning";
+                        button.onclick = function () {
+                            window.location.href = "/ShoppingCart/CartDetails";
+                        };
+
+                        // Remove "Add to Cart" specific attributes
+                        button.removeAttribute("name");
+                        button.removeAttribute("data-id");
+                    }
+
+                    updateShoppingCartDiv(data.shoppingCart);
+                    // let shoppingCart = document.getElementById("shopping-cart");
+                    // if (shoppingCart) {
+                    //     let currentNumber = parseInt(shoppingCart.textContent);
+                    //     shoppingCart.textContent = data.shoppingCart.quantity;
+                    //     // shoppingCart.textContent = currentNumber + 1;
+                    // }
+                },
+                error: function (err) {
+                    //=== Displaying error message ===//
+                    console.log('buyIt Error', { err });
+
+                },
+                complete: function () {
+
+                },
+            });
+
+        }
+
+        // cart animation
+        const animateProduct = (pointer) => {
+            // alert(pointer)
+            const imgShoppingCart = document.getElementById("shopping-cart-img");
+            if (!imgShoppingCart) return;
+
+            const button = pointer;
+            const divCard = button.parentElement;
+            const img = divCard.querySelector("img[name='audioImage']")
+            console.log(img)
+
+            // using jquery
+            let imageCloned = $(img).clone();
+            $(imageCloned).offset({
+                top: $(img).offset().top,
+                left: $(img).offset().left
+            }).css({
+                'position': 'absolute',
+                'width': '90px',
+                'opacity': '0.5',
+                'z-index': '10'
+            }).appendTo($("body"))
+                .animate({
+                    top: $(imgShoppingCart).offset().top,
+                    left: $(imgShoppingCart).offset().left,
+                }, 1000, 'linear')
+                .animate({
+                    width: '0',
+                    height: '0',
+                }, function () {
+                    $(this).detach();
+                });
+        }
+
+        // Play video on hover
+        document.addEventListener('DOMContentLoaded', function () {
+            var productItems = document.querySelectorAll('.course-image');
+
+            productItems.forEach(function (courseItem) {
+                var courseId = courseItem.querySelector('video').id.split('_')[1];
+                var previewVideo = document.getElementById('previewVideo_' + courseId);
+                var image = document.getElementById('image_' + courseId);
+                var container = document.getElementById('courseContainer_' + courseId);
+                var productDiv = document.getElementById('productItem_' + courseId);
+
+                courseItem.addEventListener('mouseenter', function () {
+                    image.style.display = 'none'; // Hide the image
+                    previewVideo.style.display = 'block'; // Show the video
+                    previewVideo.currentTime = 0; // Start the video from the beginning
+                    previewVideo.play(); // Play the video
+
+                    // Expand container size to fit the video
+                    container.style.width = '400px';
+                    container.style.height = '300px';
+                    productDiv.classList.add('expanded'); // Increase product div size
+                });
+
+                courseItem.addEventListener('mouseleave', function () {
+                    previewVideo.pause(); // Pause the video
+                    previewVideo.style.display = 'none'; // Hide the video
+                    image.style.display = 'block'; // Show the image
+
+                    // Restore container size
+                    container.style.width = '200px';
+                    container.style.height = '200px';
+                    productDiv.classList.remove('expanded'); // Reset product div size
+                });
+            });
+        });
+    </script>
+}

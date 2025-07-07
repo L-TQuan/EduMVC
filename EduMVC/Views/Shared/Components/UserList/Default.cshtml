@@ -1,0 +1,107 @@
+﻿@model List<EduMVC.ViewModels.UserViewModel>
+@{
+    var currentPage = (int)ViewBag.CurrentPage;
+    var maxPage = (int)ViewBag.MaxPage;
+    var previousPage = currentPage - 1;
+    var nextPage = currentPage + 1;
+}
+
+<form method="post">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th width="10%">Name</th>
+                <th width="20%">Email</th>
+                <th width="20%">Role</th>
+                <th width="25%">Teacher Approval</th>
+                <th width="25%">Profile</th>
+                <th width="10%">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                foreach (var user in Model)
+                {
+                    <tr>
+                        <td>@user.UserName</td>
+                        <td>@user.Email</td>
+                        <td>
+                            <label for="role-select-@user.Id" class="sr-only">Role</label>
+                            @Html.DropDownListFor(
+                                     model => user.RoleName,
+                                     new SelectList(user.Roles, "Name", "Name", user.RoleName),
+                                     new { @class = "form-control", id = "role-select-" + user.Id }
+                                     )
+                        </td>
+                        <td>
+                            @if (user.RoleName == "Teacher")
+                            {
+                                <label for="status-select-@user.Id" class="sr-only">Status</label>
+                                @Html.DropDownListFor(
+                                         model => user.Status,
+                                         new SelectList(Enum.GetValues(typeof(EduMVC.Enums.TeacherStatusEnum)), user.Status),
+                                         new { @class = "form-control", id = "status-select-" + user.Id }
+                                         )
+                            }
+                            else
+                            {
+                                <span>-</span>
+                            }
+                        </td>
+                        <td>
+                            @if (user.RoleName == "Teacher" && user.ProfileDocument != null)
+                            {
+                                <a class="btn btn-primary" href="@Url.Content(user.ProfileDocument.Path)" download="@user.ProfileDocument.DisplayName">
+                                    Download Profile
+                                </a>
+                            }
+                            else if (user.RoleName == "Teacher")
+                            {
+                                <span>No Profile</span>
+                            }
+                            else
+                            {
+                                <span>-</span>
+                            }
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-primary" onclick="saveUserChanges('@user.Id')">Save</button>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="6" class="text-center">No users found</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</form>
+
+<div class="row">
+    <div class="col-md-12" style="text-align: center;">
+        @if (previousPage == 0)
+        {
+            <button type="button" class="paging_button_inactive">Previous</button>
+        }
+        else
+        {
+            <button type="button" class="paging_button" onclick="reloadUserList(@previousPage)">Previous</button>
+        }
+
+        <button type="button" class="page_circle">@ViewBag.CurrentPage</button>
+
+        @if (maxPage == currentPage)
+        {
+            <button type="button" class="paging_button_inactive">Next</button>
+        }
+        else
+        {
+            <button type="button" class="paging_button" onclick="reloadUserList(@nextPage)">Next</button>
+        }
+    </div>
+</div>
+

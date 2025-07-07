@@ -1,0 +1,38 @@
+﻿@page
+@model ProfileSubmissionModel
+@{
+    ViewData["Title"] = "Profile Submission";
+    ViewData["ActivePage"] = ManageNavPages.ProfileSubmission;
+}
+
+<form method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <h3><label for="profileDocumentFile">Upload Profile Document</label></h3>
+        <input type="file" name="ProfileDocumentFile" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Submit Document</button>
+</form>
+
+<br />
+
+@if (Model.Document != null)
+{
+    <h3>Uploaded Profile Document</h3>
+    <p><strong>Document Name:</strong> @Model.Document.DisplayName</p>
+    <a href="@Url.Content(Model.Document.Path)" download="@Model.Document.DisplayName" class="btn btn-primary">View Document</a>
+}
+else
+{
+    <p>No profile document uploaded yet.</p>
+}
+
+@if (Model.StatusMessage != null)
+{
+    <div class="alert alert-success">
+        @Model.StatusMessage
+    </div>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
